@@ -39,7 +39,14 @@
 .div-mentor:hover{
   transform: scale(1.1);
 }
-
+.edit-but{
+  display: flex;
+  flex-direction: column;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 20px;
+}
 .but-add-mentor{
   display: flex;
   flex-direction: row;

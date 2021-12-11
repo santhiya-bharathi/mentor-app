@@ -3,7 +3,7 @@ import './App.css';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Paper from '@mui/material/Paper';
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import { Switch, Route, useParams } from "react-router-dom";
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -15,63 +15,64 @@ import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 
+const API_URL = "https://assigning-mentor-student.herokuapp.com";
 
 export default function App() {
 
-const mentorAndStudent = [
-  {
-"id": "100",
-"mentor":"anbu",
-"student": "san"
-  },
-  {
-    "id": "101",
-    "mentor":"jen",
-    "student": "kir"
-      },
-      {
-        "id": "102",
-        "mentor":"harish",
-        "student": "priya"
-          }
-]
+// const mentorAndStudent = [
+//   {
+// "id": "100",
+// "mentor":"anbu",
+// "student": "san"
+//   },
+//   {
+//     "id": "101",
+//     "mentor":"jen",
+//     "student": "kir"
+//       },
+//       {
+//         "id": "102",
+//         "mentor":"harish",
+//         "student": "priya"
+//           }
+// ]
 
 
-const onlyMentor = [
-{
-  "id": "100",
-"mentor":"anbu"
-},
-{
-  "id": "101",
-    "mentor":"jen"
-},
-{
-  "id": "102",
-        "mentor":"harish"
-}
-]
+// const onlyMentor = [
+// {
+//   "id": "100",
+// "mentor":"anbu"
+// },
+// {
+//   "id": "101",
+//     "mentor":"jen"
+// },
+// {
+//   "id": "102",
+//         "mentor":"harish"
+// }
+// ]
 
-const onlyStudents = [
-  {
-    "id": "100",
-    "student": "san"
-      },
-      {
-        "id": "101",
-        "student": "kir"
-          },
-          {
-            "id": "102",
-            "student": "priya"
-              }
-]
+// const onlyStudents = [
+//   {
+//     "id": "100",
+//     "student": "san"
+//       },
+//       {
+//         "id": "101",
+//         "student": "kir"
+//           },
+//           {
+//             "id": "102",
+//             "student": "priya"
+//               }
+// ]
 
-const [mentorandstudent, setMentorandstudent] = useState(mentorAndStudent);
+const [mentorandstudent, setMentorandstudent] = useState([]);
 
-const [mentors, setMentors] = useState(onlyMentor);
+const [mentors, setMentors] = useState([]);
 
-const [students, setStudents] = useState(onlyStudents);
+const [students, setStudents] = useState([]);
 
   const history = useHistory();
   const [mode, setMode] = useState("dark");
@@ -80,6 +81,31 @@ const darkTheme = createTheme({
     mode: mode,
   },
 });
+
+console.log(mentorandstudent);
+
+useEffect(()=>{
+  fetch(`${API_URL}/mentorlist`, {method:"GET"})
+  .then((data)=>data.json())
+  .then((mvs)=>setMentorandstudent(mvs));
+}, []);
+
+console.log(mentors);
+
+useEffect(()=>{
+  fetch(`${API_URL}/onlymentorlist`, {method:"GET"})
+  .then((data)=>data.json())
+  .then((mvs)=>setMentors(mvs));
+}, []);
+
+console.log(students);
+
+useEffect(()=>{
+  fetch(`${API_URL}/onlystudentslist`, {method:"GET"})
+  .then((data)=>data.json())
+  .then((mvs)=>setStudents(mvs));
+}, []);
+
   return (
     <ThemeProvider theme={darkTheme}>
     <Paper elevation={3} style={{borderRadius:"0px",minHeight:"100vh"}}>
@@ -96,27 +122,27 @@ const darkTheme = createTheme({
 
        <Switch>
       <Route exact path="/">
-          <Home mentorandstudent={mentorandstudent}/>
+          <Home />
         </Route>
 
         <Route path="/edit/:id">
-          <Editmentorandstudentlist mentorandstudent={mentorandstudent} setMentorandstudent={setMentorandstudent}/>
+          <Update />
         </Route>
 
         <Route path="/onlymentor">
-          <Onlymentor mentors={mentors} />
+          <Onlymentor />
         </Route>
 
         <Route path="/addmentor">
-          <Addmentors mentors={mentors} setMentors={setMentors}/>
+          <Addmentors />
         </Route>
 
         <Route path="/onlystudents">
-          <Onlystudents students={students}/>
+          <Onlystudents />
         </Route>
 
         <Route path="/addstudents">
-          <Addstudent students={students} setStudents={setStudents}/>
+          <Addstudent />
         </Route>
 
         </Switch>
@@ -126,15 +152,21 @@ const darkTheme = createTheme({
   );
 }
 
-function Home({mentorandstudent}) {
+function Home() {
   const history = useHistory();
+  const [mentorandstudent, setMentorandstudent] = useState([]);
+useEffect(()=>{
+  fetch(`${API_URL}/mentorlist`, {method:"GET"})
+  .then((data)=>data.json())
+  .then((mvs)=>setMentorandstudent(mvs));
+}, []);
   return (
     <section>
-     {mentorandstudent.map(({mentor,student},index)=><Mentorandstudentlist mentor={mentor} student={student} id={index}
+     {mentorandstudent.map(({mentor,student, id, _id})=><Mentorandstudentlist key = {_id} mentor={mentor} student={student} id={_id}
       editButton= {<IconButton 
         style={{marginLeft:"auto"}}
         aria-label="edit"  color="success"
-       onClick={()=>history.push("/edit/" + index)}>
+       onClick={()=>history.push("/edit/" + _id)}>
        <EditIcon />
      </IconButton>}
      />)}
@@ -155,25 +187,35 @@ function Mentorandstudentlist({mentor, student, editButton}){
   );
 }
 
-function Editmentorandstudentlist({mentorandstudent, setMentorandstudent}){
-  const history = useHistory();
+
+ function Update(){
   const {id} = useParams();
-  const detail = mentorandstudent[id]; 
+  const [detail, setDetail] = useState(null);
+  useEffect(()=>{
+    fetch(`${API_URL}/mentorlist/${id}`, {method:"GET"})
+    .then((data)=>data.json())
+    .then((mv)=>setDetail(mv));
+  }, [id]);
+   return detail? <Editmentorandstudentlist detail={detail}/>:"";
+ }
+function Editmentorandstudentlist({detail}){
+  const history = useHistory();
   const [mentor, setMentor] = useState(detail.mentor)
   const [student, setStudent] = useState(detail.student)
 
    const editAnswer =()=>{
-    
     const updatedAnswer= {mentor, student};
     console.log(updatedAnswer);
-    const copyAnswer =[...mentorandstudent];
-    copyAnswer[id] = updatedAnswer;
-    setMentorandstudent(copyAnswer);
-    history.push("/");
+    
+    fetch(`${API_URL}/mentorlist/${detail._id}`, {
+      method:"PUT",
+      body: JSON.stringify(updatedAnswer),
+      headers: {'Content-Type': 'application/json'},
+  }).then(()=>history.push("/"))
   };
 
   return(
-    <section>
+    <section className='edit-but'>
 <TextField value={mentor} 
       onChange={(event)=>setMentor(event.target.value)}  label="enter mentor name" variant="outlined" />
        <TextField value={student} 
@@ -183,8 +225,16 @@ function Editmentorandstudentlist({mentorandstudent, setMentorandstudent}){
   );
 }
 
-function Onlymentor({mentors}){
+function Onlymentor(){
   const history = useHistory();
+
+  const [mentors, setMentors] = useState([]);
+  useEffect(()=>{
+    fetch(`${API_URL}/onlymentorlist`, {method:"GET"})
+    .then((data)=>data.json())
+    .then((mvs)=>setMentors(mvs));
+  }, []);
+
   return(
     <section>
 
@@ -206,15 +256,26 @@ function Mentorlist({mentor}){
   );
 }
 
-function Addmentors({mentors, setMentors}){
+function Addmentors(){
   const history = useHistory();
 const [mentor, setMentor] = useState("")
 
+  // const addmentor =()=>{
+  //   const newment= {mentor};
+  //   setMentors([...mentors,newment]);
+  //   history.push("/onlymentor");
+  // };
   const addmentor =()=>{
     const newment= {mentor};
-    setMentors([...mentors,newment]);
-    history.push("/onlymentor");
-  };
+    console.log(newment)
+      fetch(`${API_URL}/onlymentorlist`, {
+        method:"POST",
+        body: JSON.stringify(newment),
+        headers: {'Content-Type': 'application/json'},
+    }).then(()=>history.push("/onlymentor"));
+      
+    };
+
   return(
     <div className='add-mentor'>
 
@@ -226,8 +287,14 @@ const [mentor, setMentor] = useState("")
   );
 }
 
-function Onlystudents({students}){
+function Onlystudents(){
   const history = useHistory();
+  const [students, setStudents] = useState([]);
+useEffect(()=>{
+  fetch(`${API_URL}/onlystudentslist`, {method:"GET"})
+  .then((data)=>data.json())
+  .then((mvs)=>setStudents(mvs));
+}, []);
   return(
     <section>
       <div className="but-add-mentor">
@@ -247,15 +314,27 @@ function Studentslist({student}){
   );
 }
 
-function Addstudent({students, setStudents}){
+function Addstudent(){
   const history = useHistory();
 const [student, setStudent] = useState("")
 
+  // const addmentor =()=>{
+  //   const newstu= {student};
+  //   setStudents([...students,newstu]);
+  //   history.push("/onlystudents");
+  // };
+
   const addmentor =()=>{
     const newstu= {student};
-    setStudents([...students,newstu]);
-    history.push("/onlystudents");
-  };
+    console.log(newstu)
+      fetch(`${API_URL}/onlystudentslist`, {
+        method:"POST",
+        body: JSON.stringify(newstu),
+        headers: {'Content-Type': 'application/json'},
+    }).then(()=>history.push("/onlystudents"));
+      
+    };
+
   return(
     <div className='add-mentor'>
 
